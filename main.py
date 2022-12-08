@@ -6,13 +6,21 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoSuchElementException
+import xml.parsers
 from bs4 import BeautifulSoup
 import re
 import time
 
 service = ChromeService(executable_path=ChromeDriverManager().install())
-driver = webdriver.Chrome(service=service)
-
+# driver = webdriver.Chrome(service=service)
+options = webdriver.ChromeOptions()
+options.add_argument('--ignore-certificate-errors')
+options.add_argument('--incognito')
+# options.add_argument('--window-size=1024,768')
+# options.add_argument("--no-sandbox")
+# options.headless = True
+driver = webdriver.Chrome(service=service, options=options)
+time.sleep(1)
 link = "https://twitter.com/i/flow/login"
 messagebox_link = "https://twitter.com/messages"
 message_request_link = "https://twitter.com/messages/requests"
@@ -115,30 +123,37 @@ def get_messages_from_req():
     click_accept_foreign_message()
 
 
-# Return an array of messages that we get
-def get_message_from_chat():
+def open_messagebox():
     try:
         driver.get(messagebox_link)
         chat_label = wait.until(
             EC.element_to_be_clickable((By.XPATH, "//div[@role='tablist']/div[2]"))
         )
         chat_label.click()
+    except Exception as e:
+        print(e)
+        print("Error while opening messagebox")
+        driver.quit()
 
-        soup = BeautifulSoup(driver.page_source, 'lxml')
 
-        time.sleep(2)
+# Return an array of messages that we get
+def get_message_from_chat():
+    try:
+        time.sleep(1)
+        soup = BeautifulSoup(driver.page_source, "html.parser")
 
         message_texts = []  # To hold messages
         all_divs = soup.find_all("div", {"data-testid": "cellInnerDiv"})
         for div in all_divs:
-            temp_div = div.find("div", {"data-testid": "messageEntry"}) # !!!! Div içindeki istenilen yeni div e erişilemiyor !!!
+            temp_div = div.find("div", {"data-testid": "messageEntry"})
             if (temp_div != None):
                 temp_div = temp_div.find("div", {"role": "presentation"})  # !!!
                 temp_div = temp_div.find("div", {"data-testid": "tweetText"})  # !!!
                 message_texts.append(temp_div.find("span").get_text())
 
         return message_texts
-    except:
+    except Exception as e:
+        print(e)
         print("Error while getting message from the chat")
         driver.quit()
 
@@ -149,8 +164,14 @@ def get_message_from_chat():
 login(twitter_username, twitter_password)
 
 # get_messages_from_req()
+open_messagebox()
+last_list = []
+while True:
+    arr_message = get_message_from_chat()
+    if len(arr_message) >= 1:
+        if last_list != arr_message:
+            last_list = arr_message
+            for i in arr_message:
+                print(i)
 
-arr_message = get_message_from_chat()
-
-for i in arr_message:
-    print(i)
+    time.sleep(15)
