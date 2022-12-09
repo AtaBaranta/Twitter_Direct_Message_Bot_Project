@@ -159,7 +159,17 @@ def get_message_from_chat():
 
 
 ### write a funct. that reply the messages of the other user
-
+def reply_message(message):
+    try:
+        _ = wait.until(
+            EC.element_to_be_clickable((By.XPATH, "//div[@class='DraftEditor-editorContainer']"))
+        )
+        reply_message_box = driver.find_element(By.XPATH, "//div[@data-contents='true']/div/div/span")
+        time.sleep(2)
+        reply_message_box.send_keys(message)
+        reply_message_box.send_keys(Keys.ENTER)
+    except Exception as e:
+        print(e)
 
 login(twitter_username, twitter_password)
 
@@ -170,8 +180,12 @@ while True:
     arr_message = get_message_from_chat()
     if len(arr_message) >= 1:
         if last_list != arr_message:
+            message = "Merhaba size nasıl yardımcı olabilirim?"
+            reply_message(message)
+            arr_message.append(message)
             last_list = arr_message
             for i in arr_message:
                 print(i)
+
 
     time.sleep(15)
