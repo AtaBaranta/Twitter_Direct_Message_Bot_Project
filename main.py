@@ -11,6 +11,14 @@ from bs4 import BeautifulSoup
 import re
 import time
 
+from zemberek import (
+    TurkishSpellChecker,
+    TurkishSentenceNormalizer,
+    TurkishSentenceExtractor,
+    TurkishMorphology,
+    TurkishTokenizer
+)
+
 service = ChromeService(executable_path=ChromeDriverManager().install())
 # driver = webdriver.Chrome(service=service)
 options = webdriver.ChromeOptions()
@@ -88,7 +96,7 @@ def login(username, password):
 
 
 ### write a funct. that gets the other user's messages
-def get_messages_from_req():
+def accept_messages_from_req():
     # Open message requests link
     try:
         driver.get(messagebox_link)
@@ -158,34 +166,44 @@ def get_message_from_chat():
         driver.quit()
 
 
-### write a funct. that reply the messages of the other user
+# write a funct. that reply the messages of the other user
 def reply_message(message):
     try:
         _ = wait.until(
             EC.element_to_be_clickable((By.XPATH, "//div[@class='DraftEditor-editorContainer']"))
         )
         reply_message_box = driver.find_element(By.XPATH, "//div[@data-contents='true']/div/div/span")
-        time.sleep(2)
         reply_message_box.send_keys(message)
         reply_message_box.send_keys(Keys.ENTER)
     except Exception as e:
         print(e)
 
+
+### Write a function Check is there is new message
+
+
 login(twitter_username, twitter_password)
+
+morphology = TurkishMorphology.create_with_defaults()
+normalizer = TurkishSentenceNormalizer(morphology)
 
 # get_messages_from_req()
 open_messagebox()
 last_list = []
+mes_index = 0
 while True:
     arr_message = get_message_from_chat()
-    if len(arr_message) >= 1:
+    mess_len = len(arr_message)
+    if mess_len >= 1:
         if last_list != arr_message:
             message = "Merhaba size nasıl yardımcı olabilirim?"
             reply_message(message)
             arr_message.append(message)
             last_list = arr_message
-            for i in arr_message:
-                print(i)
+            for i in arr_message[mes_index:-1]:
+                print(normalizer.normalize(i))
+                print(" ")
+            mes_index = mess_len
 
 
     time.sleep(15)
