@@ -6,11 +6,10 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoSuchElementException
-import xml.parsers
+
 from bs4 import BeautifulSoup
-import re
 import time
-from threading import Thread
+
 
 from zemberek import (
     TurkishSpellChecker,
@@ -37,8 +36,8 @@ driver.get(link)
 # soup = BeautifulSoup(driver.page_source, 'lxml')
 wait = WebDriverWait(driver, 10)
 
-twitter_username = "Ata_Procat"
-twitter_password = "Penguen123"
+twitter_username = "***"
+twitter_password = "***"
 
 
 # Clicking accept button to chat with foreign person
@@ -96,7 +95,7 @@ def login(username, password):
         driver.quit()
 
 
-### write a funct. that gets the other user's messages
+# Function that gets the other user's messages
 def accept_messages_from_req():
     # Open message requests link
     try:
@@ -131,7 +130,7 @@ def accept_messages_from_req():
     # Click accept button if there is one to accept the foreign message
     click_accept_foreign_message()
 
-
+# check is there any new message by using "len"
 def check_number_of_div_on_messagebox(old_len):
     new_len = len(driver.find_elements(By.XPATH, "//div[@role='tablist']/div"))
     print(new_len)
@@ -140,7 +139,7 @@ def check_number_of_div_on_messagebox(old_len):
         diff_len = new_len - old_len
     return new_len, diff_len
 
-
+# open a specific message by the index of the element's div
 def open_messagebox(index_for_message_box_dix, refresh_link=True):
     try:
         if (refresh_link == True):
@@ -178,7 +177,7 @@ def get_message_from_chat():
         driver.quit()
 
 
-# write a funct. that reply the messages of the other user
+# Function that reply the messages of the other user
 def reply_message(message):
     try:
         _ = wait.until(
@@ -190,8 +189,6 @@ def reply_message(message):
     except Exception as e:
         print(e)
 
-
-### Write a function Check is there is new message
 
 
 login(twitter_username, twitter_password)
@@ -207,19 +204,19 @@ new_len = 0
 dif_len = 0
 while True:
     new_len, diff_len = check_number_of_div_on_messagebox(new_len)
-    if diff_len != 0:
-        for i in range(diff_len):
+    if diff_len != 0:  # check is there is new message
+        for i in range(diff_len):  # loop over the new messages and reply them
             open_messagebox(i, False)
             arr_message = get_message_from_chat()
             mess_len = len(arr_message)
             if mess_len >= 1:
                 if last_list != arr_message:
-                    message = "Merhaba size nasıl yardımcı olabilirim?"
+                    message = "Merhaba size nasıl yardımcı olabilirim?"  # our reply message text
                     reply_message(message)
                     arr_message.append(message)
                     last_list = arr_message
-                    for i in arr_message[mes_index:-1]:
-                        print(normalizer.normalize(i))
+                    for i in arr_message[mes_index:-1]:  # loop over the new messages from a user
+                        print(normalizer.normalize(i))   # fix the typos on the messages and print them
                         print(" ")
                     mes_index = mess_len
 
