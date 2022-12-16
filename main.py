@@ -10,6 +10,7 @@ import xml.parsers
 from bs4 import BeautifulSoup
 import re
 import time
+from threading import Thread
 
 from zemberek import (
     TurkishSpellChecker,
@@ -131,11 +132,22 @@ def accept_messages_from_req():
     click_accept_foreign_message()
 
 
-def open_messagebox():
+def check_number_of_div_on_messagebox(old_len):
+    new_len = len(driver.find_elements(By.XPATH, "//div[@role='tablist']/div"))
+    print(new_len)
+    diff_len = 0
+    if old_len != new_len:
+        diff_len = new_len - old_len
+    return new_len, diff_len
+
+
+def open_messagebox(index_for_message_box_dix, refresh_link=True):
     try:
-        driver.get(messagebox_link)
+        if (refresh_link == True):
+            driver.get(messagebox_link)
+        time.sleep(1)
         chat_label = wait.until(
-            EC.element_to_be_clickable((By.XPATH, "//div[@role='tablist']/div[2]"))
+            EC.element_to_be_clickable((By.XPATH, f"//div[@role='tablist']/div[{2+index_for_message_box_dix}]"))
         )
         chat_label.click()
     except Exception as e:
@@ -188,22 +200,31 @@ morphology = TurkishMorphology.create_with_defaults()
 normalizer = TurkishSentenceNormalizer(morphology)
 
 # get_messages_from_req()
-open_messagebox()
+open_messagebox(2)
 last_list = []
 mes_index = 0
+new_len = 0
+dif_len = 0
 while True:
-    arr_message = get_message_from_chat()
-    mess_len = len(arr_message)
-    if mess_len >= 1:
-        if last_list != arr_message:
-            message = "Merhaba size nasıl yardımcı olabilirim?"
-            reply_message(message)
-            arr_message.append(message)
-            last_list = arr_message
-            for i in arr_message[mes_index:-1]:
-                print(normalizer.normalize(i))
-                print(" ")
-            mes_index = mess_len
+    new_len, diff_len = check_number_of_div_on_messagebox(new_len)
+    if diff_len != 0:
+        for i in range(diff_len):
+            open_messagebox(i, False)
+            arr_message = get_message_from_chat()
+            mess_len = len(arr_message)
+            if mess_len >= 1:
+                if last_list != arr_message:
+                    message = "Merhaba size nasıl yardımcı olabilirim?"
+                    reply_message(message)
+                    arr_message.append(message)
+                    last_list = arr_message
+                    for i in arr_message[mes_index:-1]:
+                        print(normalizer.normalize(i))
+                        print(" ")
+                    mes_index = mess_len
+
+            time.sleep(15)
+
+        time.sleep(15)
 
 
-    time.sleep(15)
